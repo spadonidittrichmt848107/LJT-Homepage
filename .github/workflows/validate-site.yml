@@ -5,7 +5,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
 
 jobs:
   build:
@@ -27,14 +26,23 @@ jobs:
         env:
           JEKYLL_ENV: production
 
-      - name: List generated pages
-        run: find _site -name "*.html" | sort
-
-      - name: Enable GitHub Pages
-        continue-on-error: true
+      - name: Check that both pages list every publication
         run: |
-          curl -sS -X POST \
-            -H "Authorization: Bearer ${{ github.token }}" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/${{ github.repository }}/pages \
-            -d '{"source":{"branch":"master","path":"/"}}'
+          set -e
+          for title in \
+            "SynLogic: Synthesizing Verifiable Reasoning Data at Scale for Learning Logical Reasoning and Beyond" \
+            "On the Perception Bottleneck of VLMs for Chart Understanding" \
+            "On the Universal Truthfulness Hyperplane Inside LLMs" \
+            "In-Context Sharpness as Alerts: An Inner Representation Perspective for Hallucination Mitigation" \
+            "C-Eval: A Multi-Level Multi-Discipline Chinese Evaluation Suite for Foundation Models" \
+            "Composing Parameter-Efficient Modules with Arithmetic Operations"; do
+            grep -Fq "$title" _site/index.html
+            grep -Fq "$title" _site/publications/index.html
+            echo "OK: $title"
+          done
+          grep -Fq "jliugi@connect.ust.hk" _site/index.html
+          grep -Fq "https://github.com/Vicent0205" _site/index.html
+          grep -Fq "/LJT-Homepage/publications/" _site/index.html
+
+      - name: Show rendered publications page
+        run: cat _site/publications/index.html
