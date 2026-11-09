@@ -7,7 +7,7 @@ redirect_from:
   - /about.html
 ---
 
-I am a first-year PhD candidate at the [HKUST NLP Group](https://hkust-nlp.github.io/), Hong Kong University of Science and Technology. My research focuses on natural language processing and machine learning.
+I am a first-year PhD candidate at the HKUST NLP Group, Hong Kong University of Science and Technology. My research focuses on natural language processing and machine learning.
 
 Education
 ======
@@ -36,18 +36,19 @@ Awards
 
 Skills
 ======
-My research skill set includes natural language processing and machine learning, with the research interests listed above.
+* Natural Language Processing
+* Machine Learning
 
 Publications
 ======
 {% for category in site.publication_category %}
-  {% assign category_publications = site.publications | where: "category", category[0] | sort: "order" %}
-  {% if category_publications.size > 0 %}
-    <h2>{{ category[1].title }}</h2>
-    {% for post in category_publications %}
-      {% include archive-single.html %}
-    {% endfor %}
-  {% endif %}
+{% assign category_publications = site.publications | where: "category", category[0] | sort: "order" %}
+{% if category_publications.size > 0 %}
+<h2>{{ category[1].title }}</h2>
+{% for post in category_publications %}
+{% include archive-single.html %}
+{% endfor %}
+{% endif %}
 {% endfor %}
 
 Contact Information

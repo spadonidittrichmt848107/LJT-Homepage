@@ -41,13 +41,13 @@ Honors and Awards
 Publications
 ======
 {% for category in site.publication_category %}
-  {% assign category_publications = site.publications | where: "category", category[0] | sort: "order" %}
-  {% if category_publications.size > 0 %}
-    <h2>{{ category[1].title }}</h2>
-    {% for post in category_publications %}
-      {% include archive-single.html %}
-    {% endfor %}
-  {% endif %}
+{% assign category_publications = site.publications | where: "category", category[0] | sort: "order" %}
+{% if category_publications.size > 0 %}
+<h2>{{ category[1].title }}</h2>
+{% for post in category_publications %}
+{% include archive-single.html %}
+{% endfor %}
+{% endif %}
 {% endfor %}
 
 Contact
