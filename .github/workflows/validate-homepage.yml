@@ -1,0 +1,67 @@
+name: Validate homepage build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - uses: ruby/setup-ruby@v1.328.0
+        with:
+          ruby-version: '3.1'
+          bundler-cache: true
+          cache-version: 0
+      - name: Build the site
+        run: bundle exec jekyll build --baseurl /LJT-Homepage
+        env:
+          JEKYLL_ENV: production
+      - name: Check page content and links
+        run: |
+          ruby <<'RUBY'
+          require 'json'
+          require 'net/http'
+          require 'uri'
+
+          root = File.read('_site/index.html')
+          publications = File.read('_site/publications/index.html')
+          cv = Dir.glob('_site/cv/index.html').first
+          abort 'About page missing' unless root
+          abort 'Publications page missing' unless publications
+          abort 'CV page missing' unless cv
+          cv = File.read(cv)
+
+          titles = Dir.glob('_publications/*.md').map do |path|
+            YAML.safe_load(File.read(path)).fetch('title')
+          end
+          [root, publications, cv].each do |content|
+            titles.each do |title|
+              abort 'Missing publication: ' + title unless content.include?(title)
+            end
+          end
+          abort 'About must list all six publications' unless root.scan('class="list__item"').size == 6
+          abort 'Unexpected missing image' if root.include?('profile.png')
+          %w[YourName RedBrick PaperTitleNumber academicpages.github.io].each do |placeholder|
+            [root, publications, cv].each do |content|
+              abort 'Template content remains: ' + placeholder if content.include?(placeholder)
+            end
+          end
+          abort 'Contact email missing' unless root.include?('mailto:jliugi@connect.ust.hk')
+          abort 'PhD programme missing' unless root.include?('Ph.D. in Computer Science')
+          abort 'Duplicate or broken main navigation' unless root.scan(/href="\/LJT-Homepage\/(?:publications|cv)\//').sort == ['/LJT-Homepage/cv/', '/LJT-Homepage/publications/']
+          links = File.read('_site/sitemap.xml').scan(/<loc>(.*?)<\/loc>/).flatten
+          abort 'Unexpected sample content page in sitemap' if links.any? { |url| url =~ %r{/publication/\d{4}-} }
+          puts "Validated #{titles.size} publications on About, CV, and Publications; #{links.size} sitemap URLs."
+          url = URI('https://spadonidittrichmt848107.github.io/LJT-Homepage/')
+          response = Net::HTTP.start(url.hostname, url.port, use_ssl: true) do |http|
+            http.request_head(url, timeout: 15)
+          end
+          puts "Published homepage HTTP status: #{response.code}"
+          RUBY
