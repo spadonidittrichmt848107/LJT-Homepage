@@ -48,14 +48,15 @@ jobs:
           end
           abort 'About must list all six publications' unless root.scan('class="list__item"').size == 6
           abort 'Unexpected missing image' if root.include?('profile.png')
-          %w[YourName RedBrick PaperTitleNumber academicpages.github.io].each do |placeholder|
+          %w[YourName RedBrick PaperTitleNumber https://academicpages.github.io].each do |placeholder|
             [root, publications, cv].each do |content|
               abort 'Template content remains: ' + placeholder if content.include?(placeholder)
             end
           end
           abort 'Contact email missing' unless root.include?('mailto:jliugi@connect.ust.hk')
           abort 'PhD programme missing' unless root.include?('Ph.D. in Computer Science')
-          abort 'Duplicate or broken main navigation' unless root.scan(/href="\/LJT-Homepage\/(?:publications|cv)\//').sort == ['/LJT-Homepage/cv/', '/LJT-Homepage/publications/']
+          nav = root.scan(/href="([^"]+)"/).flatten.grep(%r{^/LJT-Homepage/(?:publications|cv)/})
+          abort 'Duplicate or broken main navigation' unless nav.sort == ['/LJT-Homepage/cv/', '/LJT-Homepage/publications/']
           links = File.read('_site/sitemap.xml').scan(/<loc>(.*?)<\/loc>/).flatten
           abort 'Unexpected sample content page in sitemap' if links.any? { |url| url =~ %r{/publication/\d{4}-} }
           puts "Validated #{titles.size} publications on About, CV, and Publications; #{links.size} sitemap URLs."
